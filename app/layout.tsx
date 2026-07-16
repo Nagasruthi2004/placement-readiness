@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     default: 'Placement Readiness Portal — PSG College Of Technology (MCA)',
     template: '%s | Placement Readiness - PSG Tech',
   },
+  icons: {
+    icon: '/favicon.png',
+  },
   description:
     'Official Placement Readiness Portal for PSG College Of Technology (MCA of PSGCT). Track submissions, coding scores, and engineering sprints. Managed by Placement Representative 2025-2027: Tino Britty.',
   keywords: [
@@ -95,7 +98,7 @@ export default function RootLayout({
           <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px]" />
         </div>
         
-        <div className="relative z-10 flex min-h-screen">
+        <div className="relative z-10 flex flex-col lg:flex-row min-h-screen">
           <Sidebar githubOwner={OWNER} githubRepo={REPO} />
           
           <main className="flex-1 lg:pl-64 min-w-0 flex flex-col">
