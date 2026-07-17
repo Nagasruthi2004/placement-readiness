@@ -10,6 +10,7 @@ import Heatmap from '@/components/Heatmap'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import Avatar from '@/components/Avatar'
 import { getMission } from '@/lib/missions'
+import CompanyLogo from '@/components/CompanyLogo'
 
 interface Props {
   params: Promise<{ rollnumber: string }>
@@ -136,7 +137,9 @@ export default async function StudentProfilePage({ params }: Props) {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         {mission && (
-                          <span className="text-base">{mission.companyIcon}</span>
+                          <div className="w-8 h-8 rounded-full bg-[#050505] border border-slate-800 flex items-center justify-center">
+                            <CompanyLogo name={mission.company} size={16} />
+                          </div>
                         )}
                         <Link
                           href={`/activities/${day}`}

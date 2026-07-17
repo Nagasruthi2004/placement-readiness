@@ -12,6 +12,7 @@ import {
 } from '@/lib/data'
 import { CohortRadarChart } from '@/components/CohortRadarChart'
 import { getTodayMission, getMission, MISSIONS_DATA } from '@/lib/missions'
+import CompanyLogo from '@/components/CompanyLogo'
 
 export const metadata: Metadata = {
   title: 'Dashboard — Placement Readiness Portal',
@@ -81,7 +82,7 @@ export default async function DashboardPage() {
             </span>
           </h1>
           <p className="text-slate-400 text-lg md:text-xl font-medium max-w-lg">
-            {daysRun.length} mission{daysRun.length !== 1 ? 's' : ''} complete.{' '}
+            {daysRun.length} mission{daysRun.length !== 1 ? 's' : ''} completed.{' '}
             <span className="text-white">No login required — all {Object.keys(roster).length} students tracked.</span>
           </p>
           {(() => {
@@ -95,7 +96,9 @@ export default async function DashboardPage() {
                     href={`/activities/${todayMission.date}`}
                     className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-brand-500/15 border border-brand-500/30 hover:bg-brand-500/25 transition-all group"
                   >
-                    <span className="text-xl">{todayMission.companyIcon}</span>
+                    <div className="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+                      <CompanyLogo name={todayMission.company} size={20} />
+                    </div>
                     <div>
                       <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Today&apos;s Mission</div>
                       <div className="text-sm font-bold text-white">{todayMission.missionName}</div>
@@ -429,7 +432,7 @@ export default async function DashboardPage() {
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-brand-400 text-base">
-                        {m?.companyIcon ?? (i === 0 ? <ShieldIcon className="w-4 h-4" /> : i === 1 ? <DocumentIcon className="w-4 h-4" /> : <CrownIcon className="w-4 h-4" />)}
+                        {m ? <CompanyLogo name={m.company} size={16} /> : (i === 0 ? <ShieldIcon className="w-4 h-4" /> : i === 1 ? <DocumentIcon className="w-4 h-4" /> : <CrownIcon className="w-4 h-4" />)}
                       </div>
                       <div>
                         <span className="font-semibold text-slate-300 text-sm">{m?.missionName ?? day.label}</span>

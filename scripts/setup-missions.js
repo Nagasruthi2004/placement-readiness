@@ -106,6 +106,7 @@ const missionsTsContent = '/**\n' +
 '  optionalDeliverables?: string[]\n' +
 '  isSpecial?: boolean\n' +
 '  specialNote?: string\n' +
+'  guide?: string\n' +
 '}\n\n' +
 'export const WEEK_THEMES: Record<number, { label: string; companies: string; color: string }> = {\n' +
 "  1: { label: 'Consulting & Services',          companies: 'TCS · Deloitte', color: 'blue' },\n" +

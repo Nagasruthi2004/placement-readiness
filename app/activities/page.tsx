@@ -5,6 +5,7 @@ import {
   buildActivityDays,
 } from '@/lib/data'
 import { getMission, MISSIONS_DATA, WEEK_THEMES, isMissionUnlocked } from '@/lib/missions'
+import CompanyLogo from '@/components/CompanyLogo'
 
 export const metadata: Metadata = {
   title: 'Mission Control',
@@ -218,7 +219,7 @@ function MissionCard({
       {/* Mission info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <span className="text-lg">{mission!.companyIcon}</span>
+          <CompanyLogo name={mission!.company} size={20} />
           <span className="font-black text-white text-base">{mission!.missionName}</span>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${wc.badge}`}>
             {mission!.skill}

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import ReactMarkdown from 'react-markdown'
+import CompanyLogo from '@/components/CompanyLogo'
 import {
   getAllData,
   buildActivityDays,
@@ -73,7 +75,7 @@ export default async function ActivityDetailPage({ params }: Props) {
           {/* Company icon + date */}
           <div className="flex-shrink-0 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[#050505] border border-slate-800 flex items-center justify-center text-3xl mb-2">
-              {mission?.companyIcon ?? '📅'}
+              {mission ? <CompanyLogo name={mission.company} size={32} /> : '📅'}
             </div>
             <div className="text-[10px] text-slate-500 font-mono">{label}</div>
           </div>
@@ -138,6 +140,15 @@ export default async function ActivityDetailPage({ params }: Props) {
               </li>
             ))}
           </ol>
+        </div>
+      )}
+
+      {/* Problem Statement / Guide */}
+      {mission?.guide && (
+        <div className="card border-brand-500/30 bg-gradient-to-br from-brand-900/10 to-transparent">
+          <div className="markdown-content text-sm text-slate-300 prose prose-invert max-w-none prose-headings:text-brand-400 prose-a:text-brand-300">
+            <ReactMarkdown>{mission.guide}</ReactMarkdown>
+          </div>
         </div>
       )}
 

@@ -57,26 +57,34 @@ function listDirs(absPath) {
 }
 
 // Check if a file is non-empty and has required section headers (documentation heuristic)
-function documentationScore(readmePath) {
-  if (!existsSync(readmePath)) return 0;
+function documentationScore(folderPath) {
+  if (!existsSync(folderPath)) return 0;
   
   try {
-    const stats = statSync(readmePath);
-    if (!stats.isFile()) return 0; // Prevent crash if it's accidentally a directory
+    const files = readdirSync(folderPath);
+    const mdFiles = files.filter(f => f.toLowerCase().endsWith('.md') && f.toLowerCase() !== 'prompts.md');
+    
+    let maxScore = 0;
 
-    const content = readFileSync(readmePath, 'utf8').trim();
-    if (content.length < 20) return 0;
+    for (const file of mdFiles) {
+      const filePath = join(folderPath, file);
+      const stats = statSync(filePath);
+      if (!stats.isFile()) continue;
+
+      const content = readFileSync(filePath, 'utf8').trim();
+      if (content.length < 20) continue;
+      
+      const hasHeading = /^#+\s+\S/m.test(content);
+      const filledIn = content.replace(/<!--.*?-->/gs, '').trim().length > 80;
+      
+      if (hasHeading && filledIn) maxScore = Math.max(maxScore, 5);
+      else if (filledIn) maxScore = Math.max(maxScore, 3);
+      else maxScore = Math.max(maxScore, 1);
+    }
     
-    // Check for at least one markdown heading
-    const hasHeading = /^#+\s+\S/m.test(content);
-    // Check for meaningful content (more than just the template blanks)
-    const filledIn = content.replace(/<!--.*?-->/gs, '').trim().length > 80;
-    
-    if (hasHeading && filledIn) return 5;
-    if (filledIn) return 3;
-    return 1;
+    return maxScore;
   } catch (err) {
-    console.error(`⚠️ Error reading ${readmePath}:`, err.message);
+    console.error(`⚠️ Error reading ${folderPath}:`, err.message);
     return 0; // Graceful fallback on crash
   }
 }
@@ -141,9 +149,9 @@ for (const roll of Object.keys(roster)) {
     const submittedFolder = submittedByDay[day]?.find(f => f.toLowerCase() === roll);
     const submitted = (submittedFolder || attendance[roll][day] === 'manual-present') ? 10 : 0;
 
-    // documentation: recompute heuristic, but never lower a manually-set value above heuristic
-    const readmePath = submittedFolder ? join(activitiesDir, day, submittedFolder, 'README.md') : '';
-    const docHeuristic = (submittedFolder && existsSync(readmePath)) ? documentationScore(readmePath) : 0;
+    // documentation: dynamically check all .md files (profile.md, README.md, etc.)
+    const folderPath = submittedFolder ? join(activitiesDir, day, submittedFolder) : '';
+    const docHeuristic = (submittedFolder && existsSync(folderPath)) ? documentationScore(folderPath) : 0;
     const documentation = submitted > 0 ? Math.max(prev.documentation ?? 0, docHeuristic) : 0;
 
     // quality / reflection / prompting: default to 5 if newly submitted and not yet graded

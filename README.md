@@ -46,13 +46,13 @@ The portal uses an automated bot (`scripts/recalculate-scores.mjs`) to assign sc
 Here is exactly how the daily marks are calculated:
 
 - **Submission (`+10 pts`)**: Automatically given if you created your folder and pushed code.
-- **Documentation (`+0 to +5 pts`)**: An automated heuristic checks your `README.md`. If it has markdown headers (`#`) and more than 80 characters of custom text, you get 5 points. If it's missing, mostly empty, or you just copy-pasted the blank template, you get 0 points.
+- **Documentation (`+0 to +5 pts`)**: An automated heuristic checks your main deliverable file (e.g., `profile.md` for Day 1, or `README.md` for other days). If any `.md` file in your folder has markdown headers (`#`) and more than 80 characters of meaningful content, you get 5 points. If your markdown files are missing, mostly empty, or just copy-pasted templates, you get 0 points.
 - **Quality (`+5 pts`)**: Given by default (until manual review).
 - **Reflection (`+5 pts`)**: Given by default (until manual review).
 - **Prompting (`+5 pts`)**: 0 points on Day 1 & Day 2 (disabled). Otherwise, given by default (until manual review).
 
 > [!TIP]
-> If you received `20 points` instead of `25 points` on Day 1, your `README.md` failed the documentation check! Make sure to write actual content in your README.
+> If you received `20 points` instead of `25 points`, your Markdown file (`profile.md` or `README.md`) failed the documentation check! Make sure you are writing actual content, using markdown headers, and avoiding blank templates.
 
 ---
 
