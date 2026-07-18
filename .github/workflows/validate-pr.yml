@@ -51,19 +51,38 @@ jobs:
             const roster = JSON.parse(require('fs').readFileSync('data/roster.json','utf8'));
             const login = '$GITHUB_LOGIN'.toLowerCase();
             const entry = Object.entries(roster).find(([, v]) => v.github.toLowerCase() === login);
-            if (!entry) { console.error('GitHub login not found in roster.json:', login); process.exit(1); }
-            console.log(entry[0]);
+            if (!entry) { console.log('UNKNOWN'); } else { console.log(entry[0]); }
           ")
           
           echo "Resolved roll number: $ROLL"
           echo "roll=${ROLL}" >> $GITHUB_OUTPUT
 
+      # ── Check if the user is a collaborator ──────────────────────────────────
+      - name: Check Collaborator Status
+        id: collab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          if gh api repos/${{ github.repository }}/collaborators/$AUTHOR --silent 2>/dev/null; then
+            echo "is_collaborator=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_collaborator=false" >> $GITHUB_OUTPUT
+          fi
+
       # ── Run the validation script ─────────────────────────────────────────────
       - name: Run validate-submission.mjs
+        if: steps.roll.outputs.roll != 'UNKNOWN'
         run: |
           node scripts/validate-submission.mjs \
             --changed-files="${{ steps.files.outputs.changed }}" \
             --author-roll="${{ steps.roll.outputs.roll }}"
+
+      - name: Fail if unknown user and not collaborator
+        if: steps.roll.outputs.roll == 'UNKNOWN' && steps.collab.outputs.is_collaborator == 'false'
+        run: |
+          echo "❌ Author is not in roster.json and is not a collaborator."
+          exit 1
 
       # ── On failure, post a helpful comment on the PR ───────────────────────────
       - name: Post failure comment
@@ -83,6 +102,7 @@ jobs:
               - **Missing files**: The required \`README.md\`, \`reflection.md\`, or \`prompts.md\` is not in your submission folder.
               - **Empty reflection**: Your \`reflection.md\` is too short. Write a real reflection (minimum 50 characters).
               - **File too large**: A file exceeds the 2 MB limit.
+              - **Unknown User**: Your GitHub username is not in \`data/roster.json\`.
               
               Please check the **Actions** tab for the full error message, fix the issue, and push again.
               
@@ -92,44 +112,41 @@ jobs:
           ROLL: ${{ steps.roll.outputs.roll }}
 
       # ── Auto-merge valid student submissions ───────────────────────────────────
-      - name: Auto-merge Student PR
+      - name: Auto-merge PR
         if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           AUTHOR="${{ github.event.pull_request.user.login }}"
           
-          echo "Checking if $AUTHOR is a collaborator or owner..."
-          # If this returns successfully, the user is a collaborator
-          if gh api repos/${{ github.repository }}/collaborators/$AUTHOR --silent 2>/dev/null; then
-            echo "Author $AUTHOR is a collaborator or owner. Skipping auto-merge."
-            exit 0
-          fi
-          
-          echo "Checking if only activities folder was edited..."
-          CHANGED="${{ steps.files.outputs.changed }}"
-          
-          # Split by comma and check if every file starts with 'activities/'
-          IFS=',' read -ra FILES <<< "$CHANGED"
-          ONLY_ACTIVITIES=true
-          for file in "${FILES[@]}"; do
-            [ -z "$file" ] && continue
-            if [[ "$file" != activities/* ]]; then
-              ONLY_ACTIVITIES=false
-              break
+          if [ "${{ steps.collab.outputs.is_collaborator }}" == "true" ]; then
+            echo "Author $AUTHOR is a collaborator. Proceeding to auto-merge."
+          else
+            echo "Checking if only activities folder was edited by student..."
+            CHANGED="${{ steps.files.outputs.changed }}"
+            
+            # Split by comma and check if every file starts with 'activities/'
+            IFS=',' read -ra FILES <<< "$CHANGED"
+            ONLY_ACTIVITIES=true
+            for file in "${FILES[@]}"; do
+              [ -z "$file" ] && continue
+              if [[ "$file" != activities/* ]]; then
+                ONLY_ACTIVITIES=false
+                break
+              fi
+            done
+            
+            if [ "$ONLY_ACTIVITIES" = false ]; then
+              echo "Student PR contains changes outside the 'activities/' folder. Skipping auto-merge."
+              exit 0
             fi
-          done
-          
-          if [ "$ONLY_ACTIVITIES" = false ]; then
-            echo "PR contains changes outside the 'activities/' folder. Skipping auto-merge."
-            exit 0
+            echo "Author $AUTHOR is a student and only edited activities. Submissions passed validation."
           fi
           
-          echo "Author $AUTHOR is a student and only edited activities. Submissions passed validation."
           echo "Approving and auto-merging PR..."
           
           # Approve the PR (Optional but helpful if branch protection requires approvals)
-          gh pr review ${{ github.event.pull_request.number }} --approve -b "Automatic approval: submission passed all requirements. 🎉" || echo "Approval failed or not required."
+          gh pr review ${{ github.event.pull_request.number }} --approve -b "Automatic approval. 🎉" || echo "Approval failed or not required."
           
           # Enable auto-merge (will merge when this workflow completes if branch protection requires it)
           gh pr merge ${{ github.event.pull_request.number }} --auto --squash -d || gh pr merge ${{ github.event.pull_request.number }} --squash -d || echo "Failed to merge PR"
